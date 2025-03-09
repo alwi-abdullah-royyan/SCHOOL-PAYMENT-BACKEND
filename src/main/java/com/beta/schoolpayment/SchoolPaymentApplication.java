@@ -8,6 +8,7 @@ public class SchoolPaymentApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SchoolPaymentApplication.class, args);
+		System.out.println("==========SERVER IS RUNNING==========");
 	}
 
 }
