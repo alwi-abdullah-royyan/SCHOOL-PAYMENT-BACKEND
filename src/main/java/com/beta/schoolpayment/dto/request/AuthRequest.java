@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class AuthRequest {
-    private String email;
-    private Long nis;
+    private String identifier; // Bisa berupa email atau NIS
     private String password;
 }
