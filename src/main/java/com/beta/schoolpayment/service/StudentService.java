@@ -4,9 +4,9 @@ import com.beta.schoolpayment.dto.request.StudentRequest;
 import com.beta.schoolpayment.dto.response.StudentResponse;
 import com.beta.schoolpayment.exception.DataNotFoundException;
 import com.beta.schoolpayment.exception.ValidationException;
-import com.beta.schoolpayment.model.ClassEntity;
+import com.beta.schoolpayment.model.Classes;
 import com.beta.schoolpayment.model.Student;
-import com.beta.schoolpayment.repository.ClassRepository;
+import com.beta.schoolpayment.repository.ClassesRepository;
 import com.beta.schoolpayment.repository.StudentRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class StudentService {
     private StudentRepository studentRepository;
 
     @Autowired
-    private ClassRepository classRepository;
+    private ClassesRepository classesRepository;
 
     public Page<StudentResponse> getAllStudents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -42,7 +42,7 @@ public class StudentService {
         }
 
         Student student = new Student();
-        ClassEntity classEntity = classRepository.findById(studentRequest.getClassId())
+        Classes classes = classesRepository.findById(studentRequest.getClassId())
                 .orElseThrow(() -> new DataNotFoundException("Class not found"));
 
         student.setNis(studentRequest.getNis());
@@ -50,7 +50,7 @@ public class StudentService {
         student.setBirthdate(studentRequest.getBirthdate());
         student.setAddress(studentRequest.getAddress());
         student.setPhoneNumber(studentRequest.getPhoneNumber());
-        student.setClassEntity(classEntity);
+        student.setClasses(classes);
 
         student = studentRepository.save(student);
         return convertToResponse(student);
@@ -85,10 +85,10 @@ public class StudentService {
         if (studentRequest.getPhoneNumber() != null && !studentRequest.getPhoneNumber().equals(student.getPhoneNumber())) {
             student.setPhoneNumber(studentRequest.getPhoneNumber());
         }
-        if (studentRequest.getClassId() != null && !studentRequest.getClassId().equals(student.getClassEntity().getId())) {
-            ClassEntity classEntity = classRepository.findById(studentRequest.getClassId())
+        if (studentRequest.getClassId() != null && !studentRequest.getClassId().equals(student.getClasses().getClassesId())) {
+            Classes classes = classesRepository.findById(studentRequest.getClassId())
                     .orElseThrow(() -> new DataNotFoundException("Class not found"));
-            student.setClassEntity(classEntity);
+            student.setClasses(classes);
         }
 
         student = studentRepository.save(student);
@@ -102,9 +102,9 @@ public class StudentService {
         response.setNis(student.getNis());
         response.setName(student.getName());
 
-        if (student.getClassEntity() != null) {
-            response.setClassId(student.getClassEntity().getId());
-            response.setClassName(student.getClassEntity().getClassName());
+        if (student.getClasses() != null) {
+            response.setClassId(student.getClasses().getClassesId());
+            response.setClassName(student.getClasses().getClassesName());
         }
 
         response.setBirthdate(student.getBirthdate());

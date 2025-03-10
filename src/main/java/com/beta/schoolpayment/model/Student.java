@@ -25,7 +25,7 @@ public class Student {
 
     @ManyToOne
     @JoinColumn(name = "class_id", referencedColumnName = "class_id", foreignKey = @ForeignKey(name = "fk_class"))
-    private ClassEntity classEntity; //this is Class, because cant name it class, so its ClassEntity
+    private Classes classes; //this is Class, because cant name it class, so its ClassEntity
 
     @Column(name = "birthdate", nullable = false)
     private LocalDate birthdate;

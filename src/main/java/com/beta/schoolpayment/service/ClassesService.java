@@ -38,7 +38,7 @@ public class ClassesService {
         try {
             Classes classes = new Classes();
             classes.setClassesName(request.getClassesName());
-            SchoolYear schoolYear = schoolYearRepository.findBySchoolYearId(request.getSchoolYearId())
+            SchoolYear schoolYear = schoolYearRepository.findById(request.getSchoolYearId())
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("School year not found"));
@@ -58,7 +58,7 @@ public class ClassesService {
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Classes not found"));
             classes.setClassesName(classesRequest.getClassesName());
-            SchoolYear schoolYear = schoolYearRepository.findBySchoolYearId(classesRequest.getSchoolYearId())
+            SchoolYear schoolYear = schoolYearRepository.findById(classesRequest.getSchoolYearId())
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("School year not found"));
@@ -96,7 +96,7 @@ public class ClassesService {
         ClassesResponse response = new ClassesResponse();
         response.setClassesId(classes.getClassesId());
         response.setClassesName(classes.getClassesName());
-        response.setSchoolYearId(classes.getSchoolYearId().getSchoolYearId());
+        response.setSchoolYearId(classes.getSchoolYearId().getId());
         response.setCreatedAt(classes.getCreatedAt());
         response.setUpdatedAt(classes.getUpdatedAt());
         return response;
