@@ -1,4 +1,4 @@
-package com.alwi.ecommerce.dto.response;
+package com.beta.schoolpayment.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
