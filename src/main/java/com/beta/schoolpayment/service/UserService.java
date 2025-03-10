@@ -100,18 +100,18 @@ public class UserService implements UserDetailsService {
     }
     //login
     public AuthResponse login(AuthRequest authRequest) {
-        String identifier = authRequest.getEmail(); // Bisa jadi Email atau NIS dalam bentuk String
-        Long nis = convertNis(identifier);
-        // Autentikasi menggunakan UsernamePasswordAuthenticationToken
+        String identifier = authRequest.getIdentifier();
+        Long nis = convertNis(identifier); // Cek apakah identifier ini NIS
+
+        // Cari user berdasarkan Email atau NIS
+        User user = userRepository.findByEmailOrNis(identifier, nis)
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
+        // Gunakan email user untuk autentikasi karena Spring Security mengenal email sebagai username
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(identifier, authRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(user.getEmail(), authRequest.getPassword())
         );
 
         if (authentication.isAuthenticated()) {
-            // Cari user berdasarkan Email atau NIS
-            User user = userRepository.findByEmailOrNis(identifier, nis)
-                    .orElseThrow(() -> new DataNotFoundException("User not found"));
-
             // Generate token JWT
             String token = jwtUtil.generateToken(user);
             return new AuthResponse(token);
@@ -119,6 +119,7 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Invalid authentication");
         }
     }
+
 
 
     public UserResponse convertToResponse(User user) {
