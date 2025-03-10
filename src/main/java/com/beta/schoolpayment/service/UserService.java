@@ -13,7 +13,11 @@ import com.beta.schoolpayment.security.CustomUserDetails;
 import com.beta.schoolpayment.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,20 +27,38 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+
     @Autowired
     private StudentRepository studentRepository;
+
     @Autowired
     @Lazy
     private AuthenticationManager authenticationManager;
+
     private final PasswordEncoder passwordEncoder;
+
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${file.IMAGE_DIR}")
+    private String imageDirectory;
+    private static final String[] allowedFileTypes = {"image/jpeg", "image/png", "image/jpg"};
 
     @Autowired
     public UserService(UserRepository userRepository){
@@ -120,6 +142,125 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    public Page<UserResponse> getAllUser(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> user = userRepository.findAll(pageable);
+        return user.map(this::convertToResponse);
+    }
+
+    public Page<UserResponse> getUserFilter(int page, int size, String role) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> userPage = userRepository.findByRoleOrderByUpdatedAtDesc(role, pageable);
+        return userPage.map(this::convertToResponse);
+    }
+
+    @Transactional
+    public UserResponse updateRole(UUID userId, UserRequest userRequest) {
+        if (userRequest.getRole() == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        } else if (!userRequest.getRole().equals("STUDENT") && !userRequest.getRole().equals("ADMIN")) {
+            throw new IllegalArgumentException("Role must be 'STUDENT' or 'ADMIN'");
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        user.setRole(userRequest.getRole());
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+    @Transactional
+    public UserResponse softDelete(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        user.setDeletedAt(LocalDateTime.now());
+        User deletedUser = userRepository.save(user);
+        return convertToResponse(deletedUser);
+    }
+    @Transactional
+    public void hardDelete(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        userRepository.delete(user);
+    }
+    //Validasi file
+    private static void validateFile(MultipartFile file){
+        long maxFileSize = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > maxFileSize) {
+            throw new ValidationException("File size must be less than 5MB");
+        }
+        String fileType=file.getContentType();
+        boolean isValidType=false;
+        for (String type : allowedFileTypes){
+            if (Objects.equals(type, fileType)){
+                isValidType=true;
+                break;
+            }
+        }
+        if (!isValidType){
+            throw new ValidationException("File type must be image/jpeg, image/png, or image/jpg");
+        }
+    }
+    private String generateUniqueFileName(String originalFileName) {
+        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        return UUID.randomUUID().toString() + extension;
+    }
+    @Transactional
+    public UserResponse updateProfile(Authentication authentication, UserRequest userRequest) {
+        UserDetails auth = (UserDetails) authentication.getPrincipal();
+        String username = auth.getUsername();
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new DataNotFoundException("User not found"));
+        if (userRequest.getEmail() != null) {
+            if (userRepository.findUserByEmail(userRequest.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email already exists");
+            }
+            user.setEmail(userRequest.getEmail());
+        }
+        if (userRequest.getPassword() != null) {
+            if (userRequest.getPassword().length() >= 8) {
+                throw new ValidationException("Password must be at least 8 characters");
+            }
+            if (!userRequest.getPassword().equals(userRequest.getConfirmPassword())){
+                throw new ValidationException("Password and confirm password do not match");
+            }
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        }
+        if(userRequest.getProfilePicture() != null && !userRequest.getProfilePicture().isEmpty()) {
+            MultipartFile file = userRequest.getProfilePicture();
+            validateFile(file);
+            String uniqueFileName = generateUniqueFileName(Objects.requireNonNull(file.getOriginalFilename()));
+            String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            Path fullPath = Path.of(imageDirectory, datePath, uniqueFileName);
+            Path imagePath = Path.of(datePath, uniqueFileName);
+
+            try {
+                Files.createDirectories(fullPath.getParent());
+                Files.copy(file.getInputStream(), fullPath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            user.setProfilePicture(imagePath.toString());
+        }
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+
+    public byte[] getImageById(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
+
+        if (user.getProfilePicture() == null) {
+            throw new DataNotFoundException("Profile picture not found for user: " + userId);
+        }
+
+        Path imagePath = Path.of(imageDirectory, user.getProfilePicture());
+
+        if (!Files.exists(imagePath)) {
+            throw new DataNotFoundException("Profile picture file not found at: " + imagePath);
+        }
+
+        try {
+            return Files.readAllBytes(imagePath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read profile picture for user: " + userId, e);
+        }
+    }
 
 
     public UserResponse convertToResponse(User user) {
@@ -131,6 +272,7 @@ public class UserService implements UserDetailsService {
         response.setRole(user.getRole());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
+        response.setDeletedAt(user.getDeletedAt());
         return response;
     }
 
