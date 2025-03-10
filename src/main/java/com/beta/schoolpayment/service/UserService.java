@@ -52,9 +52,13 @@ public class UserService implements UserDetailsService {
                 throw new IllegalArgumentException("Email already exists");
             }
 
+            if (userRequest.getPassword().length() < 8) {
+                throw new ValidationException("Password must be at least 8 characters");
+            }
             if (!userRequest.getPassword().equals(userRequest.getConfirmPassword())) {
                 throw new ValidationException("Password and confirm password do not match");
             }
+
 
             String encryptedPassword = passwordEncoder.encode(userRequest.getPassword());
 
