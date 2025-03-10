@@ -48,7 +48,7 @@ public class SchoolYearService {
     @Transactional
     public SchoolYearResponse updateSchoolYear(Long id, SchoolYearRequest request) {
         try {
-            SchoolYear schoolYear = schoolYearRepository.findBySchoolYearId(id)
+            SchoolYear schoolYear = schoolYearRepository.findById(id)
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("School year not found"));
@@ -86,7 +86,7 @@ public class SchoolYearService {
 
     private SchoolYearResponse convertToResponse(SchoolYear schoolYear) {
         SchoolYearResponse response = new SchoolYearResponse();
-        response.setSchoolYearId(schoolYear.getSchoolYearId());
+        response.setSchoolYearId(schoolYear.getId());
         response.setSchoolYear(schoolYear.getSchoolYear());
         response.setStartDate(schoolYear.getStartDate());
         response.setEndDate(schoolYear.getEndDate());

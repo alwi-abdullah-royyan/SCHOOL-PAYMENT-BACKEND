@@ -7,6 +7,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SchoolYearRepository extends JpaRepository<SchoolYear, Long> {
-    List<SchoolYear> findBySchoolYearId(Long schoolYearId);
     List<SchoolYear> findBySchoolYearContainingIgnoringCase(String schoolYear);
 }

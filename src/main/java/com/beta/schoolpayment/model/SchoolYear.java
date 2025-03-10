@@ -27,8 +27,8 @@ public class SchoolYear {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "schoolYear", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ClassEntity> classes;
+    @OneToMany(mappedBy = "schoolYearId", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Classes> classes;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
