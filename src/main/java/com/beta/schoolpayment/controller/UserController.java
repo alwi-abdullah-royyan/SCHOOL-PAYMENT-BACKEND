@@ -28,12 +28,12 @@ public class UserController {
             return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), userResponse));
         }catch(IllegalArgumentException e){
             ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
-                    "Validation Error",
+                    "Input Error",
                     e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (ValidationException e){
             ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
-                    "Password and confirm password do not match",
+                    "Validation Error",
                     e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
