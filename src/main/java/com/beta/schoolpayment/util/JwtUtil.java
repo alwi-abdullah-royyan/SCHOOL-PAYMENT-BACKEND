@@ -52,14 +52,18 @@ public class JwtUtil {
     // Generate token with custom claims
     public String generateToken(User user) {
         return Jwts.builder()
-                .claim("role", user.getRole())
-                .claim("name", user.getUserId().toString())
-                .setSubject(user.getName())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .claim("role", user.getRole())   // Role pengguna
+                .claim("userId", user.getUserId()) // ID user dalam database
+                .claim("name", user.getName())  // Nama lengkap pengguna
+                .claim("email", user.getEmail()) // Email pengguna
+                .claim("nis", user.getNis())   // NIS pengguna
+                .setSubject(user.getEmail() != null ? user.getEmail() : user.getNis().toString()) // Gunakan Email jika ada, jika tidak pakai NIS
+                .setIssuedAt(new Date()) // Waktu pembuatan token
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Berlaku 10 jam
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     // Validate the token
     public boolean validateToken(String token, UserDetails userDetails) {
