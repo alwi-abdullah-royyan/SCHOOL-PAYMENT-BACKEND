@@ -13,7 +13,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI costumOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("Ecommerce API").version("1.0.0"));
+                .info(new Info().title("Student payment API").version("1.0.0"));
     }
 }
 

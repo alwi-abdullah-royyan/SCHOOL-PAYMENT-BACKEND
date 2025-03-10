@@ -4,6 +4,7 @@ import com.beta.schoolpayment.dto.request.UserRequest;
 import com.beta.schoolpayment.dto.response.UserResponse;
 import com.beta.schoolpayment.exception.ValidationException;
 import com.beta.schoolpayment.model.User;
+import com.beta.schoolpayment.repository.StudentRepository;
 import com.beta.schoolpayment.repository.UserRepository;
 import com.beta.schoolpayment.security.CustomUserDetails;
 import jakarta.transaction.Transactional;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private StudentRepository studentRepository;
     @Autowired
     @Lazy
     private final PasswordEncoder passwordEncoder;
@@ -42,7 +45,9 @@ public class UserService implements UserDetailsService {
             if (userRepository.findUserByNis(userRequest.getNis()).isPresent()) {
                 throw new IllegalArgumentException("NIS already exists");
             }
-
+            if (!studentRepository.existsByNis(userRequest.getNis())) {
+                throw new IllegalArgumentException("NIS does not exist");
+            }
             if (userRepository.findUserByEmail(userRequest.getEmail()).isPresent()) {
                 throw new IllegalArgumentException("Email already exists");
             }
@@ -58,7 +63,7 @@ public class UserService implements UserDetailsService {
             user.setName(userRequest.getName());
             user.setEmail(userRequest.getEmail());
             user.setPassword(encryptedPassword);
-            user.setRole("USER");
+            user.setRole("STUDENT");
 
             User savedUser = userRepository.save(user);
 
@@ -66,6 +71,7 @@ public class UserService implements UserDetailsService {
     }
     public UserResponse convertToResponse(User user) {
         UserResponse response = new UserResponse();
+        response.setNis(user.getNis());
         response.setUserId(user.getUserId());
         response.setEmail(user.getEmail());
         response.setName(user.getName());
