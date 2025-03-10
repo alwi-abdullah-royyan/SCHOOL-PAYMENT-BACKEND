@@ -9,11 +9,11 @@ import java.util.UUID;
 public class UserResponse {
 
     private UUID userId;
-    private Integer nis;
+    private Long nis;
     private String email;
     private String name;
     private String role;
-
+    private String profilePicture;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
