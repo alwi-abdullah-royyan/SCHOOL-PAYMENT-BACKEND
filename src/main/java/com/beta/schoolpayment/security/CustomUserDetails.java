@@ -59,5 +59,12 @@ public class CustomUserDetails implements UserDetails {
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(user.getRole());
     }
-}
 
+    public String getEmail() {
+        return user.getEmail();
+    }
+
+    public Long getNis() {
+        return user.getNis();
+    }
+}
