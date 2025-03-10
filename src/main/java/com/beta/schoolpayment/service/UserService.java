@@ -1,15 +1,22 @@
 package com.beta.schoolpayment.service;
 
+import com.beta.schoolpayment.dto.request.AuthRequest;
 import com.beta.schoolpayment.dto.request.UserRequest;
+import com.beta.schoolpayment.dto.response.AuthResponse;
 import com.beta.schoolpayment.dto.response.UserResponse;
+import com.beta.schoolpayment.exception.DataNotFoundException;
 import com.beta.schoolpayment.exception.ValidationException;
 import com.beta.schoolpayment.model.User;
 import com.beta.schoolpayment.repository.StudentRepository;
 import com.beta.schoolpayment.repository.UserRepository;
 import com.beta.schoolpayment.security.CustomUserDetails;
+import com.beta.schoolpayment.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,15 +24,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class UserService implements UserDetailsService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
     @Lazy
+    private AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     public UserService(UserRepository userRepository){
@@ -33,11 +44,25 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder=new BCryptPasswordEncoder();
     }
     @Override
-    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        return userRepository.findByName(name)
-                .map(CustomUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with name: " + name));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        return userRepository.findByEmailOrNis(usernameOrEmail, convertNis(usernameOrEmail))
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getEmail(), // Tetap gunakan email sebagai username utama
+                        user.getPassword(),
+                        new ArrayList<>()
+                ))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+    // Method tambahan untuk konversi NIS jika memungkinkan
+    private Long convertNis(String input) {
+        try {
+            return Long.parseLong(input);
+        } catch (NumberFormatException e) {
+            return null; // Jika bukan angka, berarti ini email
+        }
+    }
+
 
     //register user
     @Transactional
@@ -73,6 +98,29 @@ public class UserService implements UserDetailsService {
 
             return convertToResponse(savedUser);
     }
+    //login
+    public AuthResponse login(AuthRequest authRequest) {
+        String identifier = authRequest.getEmail(); // Bisa jadi Email atau NIS dalam bentuk String
+        Long nis = convertNis(identifier);
+        // Autentikasi menggunakan UsernamePasswordAuthenticationToken
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(identifier, authRequest.getPassword())
+        );
+
+        if (authentication.isAuthenticated()) {
+            // Cari user berdasarkan Email atau NIS
+            User user = userRepository.findByEmailOrNis(identifier, nis)
+                    .orElseThrow(() -> new DataNotFoundException("User not found"));
+
+            // Generate token JWT
+            String token = jwtUtil.generateToken(user);
+            return new AuthResponse(token);
+        } else {
+            throw new RuntimeException("Invalid authentication");
+        }
+    }
+
+
     public UserResponse convertToResponse(User user) {
         UserResponse response = new UserResponse();
         response.setNis(user.getNis());

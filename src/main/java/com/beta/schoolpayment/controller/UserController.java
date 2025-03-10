@@ -1,5 +1,6 @@
 package com.beta.schoolpayment.controller;
 
+import com.beta.schoolpayment.dto.request.AuthRequest;
 import com.beta.schoolpayment.dto.request.UserRequest;
 import com.beta.schoolpayment.dto.response.ApiResponse;
 import com.beta.schoolpayment.dto.response.ErrorResponse;
@@ -34,6 +35,24 @@ public class UserController {
         } catch (ValidationException e){
             ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
                     "Validation Error",
+                    e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal Server Error",
+                    "An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    //login
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest){
+        try {
+            String token = userService.login(authRequest).getToken();
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), token));
+        } catch (RuntimeException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
+                    "Token invalid",
                     e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {

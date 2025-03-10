@@ -30,7 +30,7 @@ public class SecurityConfig {
         this.jwtRequestFilter = jwtRequestFilter;
         this.userService = userService;
     }
-
+   
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
