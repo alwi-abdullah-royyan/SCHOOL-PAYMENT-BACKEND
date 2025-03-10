@@ -45,7 +45,6 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-<<<<<<< Updated upstream
     @Column(name = "profile_picture")
     private String profilePicture;
 
@@ -59,7 +58,5 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-=======
 
->>>>>>> Stashed changes
 }
