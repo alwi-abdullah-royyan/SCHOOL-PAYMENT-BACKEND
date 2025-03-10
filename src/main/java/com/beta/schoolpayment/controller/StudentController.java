@@ -10,12 +10,9 @@ import com.beta.schoolpayment.exception.ValidationException;
 import com.beta.schoolpayment.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("api/students")
@@ -26,12 +23,9 @@ public class StudentController {
     @GetMapping
     public ResponseEntity<?> getAllStudent(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<StudentResponse> response = studentService.getAllStudents(page, size, startDate, endDate, sortDirection);
+            Page<StudentResponse> response = studentService.getAllStudents(page, size);
             return ResponseEntity.ok(new PaginatedResponse<>(200, response));
         } catch (Exception e) {
             ErrorResponse errorResponse = new ErrorResponse(
