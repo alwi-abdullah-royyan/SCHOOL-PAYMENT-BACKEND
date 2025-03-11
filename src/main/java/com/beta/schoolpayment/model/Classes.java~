@@ -1,6 +1,5 @@
 package com.beta.schoolpayment.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,11 +27,9 @@ public class Classes {
     @JsonIgnore // Mencegah rekursi
     private SchoolYear schoolYear;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

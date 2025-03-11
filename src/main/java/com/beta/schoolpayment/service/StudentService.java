@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -94,6 +96,24 @@ public class StudentService {
         student = studentRepository.save(student);
         return convertToResponse(student);
     }
+
+
+
+    public Page<Student> getStudents(String search, LocalDate startDate, LocalDate endDate, String sort, int page, int size) {
+        // Pastikan search tidak null (menghindari error LOWER(NULL))
+        search = (search == null) ? "" : search;
+
+        // Atur sorting berdasarkan nama
+        Sort sortBy = Sort.by(sort.equalsIgnoreCase("desc") ? Sort.Order.desc("name") : Sort.Order.asc("name"));
+        Pageable pageable = PageRequest.of(page, size, sortBy);
+
+        return studentRepository.findStudents(search, startDate, endDate, pageable);
+    }
+
+
+
+
+
 
     public static StudentResponse convertToResponse(Student student) {
         StudentResponse response = new StudentResponse();
