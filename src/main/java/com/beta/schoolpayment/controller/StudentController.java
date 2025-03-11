@@ -7,12 +7,18 @@ import com.beta.schoolpayment.dto.response.PaginatedResponse;
 import com.beta.schoolpayment.dto.response.StudentResponse;
 import com.beta.schoolpayment.exception.DataNotFoundException;
 import com.beta.schoolpayment.exception.ValidationException;
+import com.beta.schoolpayment.model.Student;
 import com.beta.schoolpayment.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/students")
@@ -133,4 +139,35 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+
+
+    @GetMapping("/search")
+    public ResponseEntity<?> getStudents(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "asc") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            Page<Student> students = studentService.getStudents(search, startDate, endDate, sort, page, size);
+            return ResponseEntity.ok(students);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "Terjadi kesalahan pada server.",
+                    "details", e.getMessage()
+            ));
+        }
+    }
+
+
+
 }

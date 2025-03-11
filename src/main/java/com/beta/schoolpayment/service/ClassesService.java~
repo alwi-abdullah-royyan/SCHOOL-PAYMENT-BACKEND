@@ -42,7 +42,7 @@ public class ClassesService {
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("School year not found"));
-            classes.setSchoolYear(schoolYear);
+            classes.setSchoolYearId(schoolYear);
             classesRepository.save(classes);
             return convertToResponse(classes);
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class ClassesService {
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("School year not found"));
-            classes.setSchoolYear(schoolYear);
+            classes.setSchoolYearId(schoolYear);
             classesRepository.save(classes);
             return convertToResponse(classes);
         } catch (Exception e) {
@@ -96,7 +96,7 @@ public class ClassesService {
         ClassesResponse response = new ClassesResponse();
         response.setClassesId(classes.getClassesId());
         response.setClassesName(classes.getClassesName());
-        response.setSchoolYearId(classes.getSchoolYear().getId());
+        response.setSchoolYearId(classes.getSchoolYearId().getId());
         response.setCreatedAt(classes.getCreatedAt());
         response.setUpdatedAt(classes.getUpdatedAt());
         return response;

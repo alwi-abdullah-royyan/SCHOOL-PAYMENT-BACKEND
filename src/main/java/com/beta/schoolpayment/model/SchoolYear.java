@@ -1,5 +1,6 @@
 package com.beta.schoolpayment.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -27,7 +28,8 @@ public class SchoolYear {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "schoolYearId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "schoolYear", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore // Mencegah rekursi
     private List<Classes> classes;
 
     @Column(name = "created_at", updatable = false)

@@ -1,5 +1,6 @@
 package com.beta.schoolpayment.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -25,8 +26,9 @@ public class Student {
 
     @ManyToOne
     @JoinColumn(name = "class_id", referencedColumnName = "class_id", foreignKey = @ForeignKey(name = "fk_class"))
-    private Classes classes; //this is Class, because cant name it class, so its ClassEntity
+    private Classes classes;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "birthdate", nullable = false)
     private LocalDate birthdate;
 
@@ -36,10 +38,10 @@ public class Student {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(name = "created_at", updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")

@@ -1,9 +1,8 @@
 spring.application.name=School Payment
-spring.datasource.url=jdbc:postgresql://localhost:5432/schoolpayment
+spring.datasource.url=jdbc:postgresql://localhost:5432/School Payment
 spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.password=admin
 spring.datasource.driver-class-name=org.postgresql.Driver
-
 
 #jwt secret
 jwt.secret=my-very-secure-secret-key-with-min-32-characters-long
