@@ -39,8 +39,22 @@ public class SecurityConfig {
                         // Swagger and API Docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                                 "/swagger-ui/index.html").permitAll()
-
-                        .anyRequest().permitAll()
+                        //public
+                        .requestMatchers(HttpMethod.POST,"/api/users/login", "/api/users/register").permitAll()
+                        //admin authenticated
+                        .requestMatchers(HttpMethod.GET, "/api/users/filter", "/api/users", "/api/students",
+                                "/api/students/search", "/api/school-years/search","/api/school-years/all",
+                                "/api/payments","/api/classes/search","/api/classes/all").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/students", "/api/school-years/create",
+                                "/api/classes/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,"/api/users/role/{id}", "/api/students/{id}",
+                                "/api/students/delete/{id}","/api/students/delete/{id}","/api/payments/status/{id}",
+                                "/api/classes/update/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/classes/update/{id}","/api/students/{id}",
+                                "/api/school-years/delete/{id}","/api/classes/delete/{id}").hasRole("ADMIN")
+                        //obviously beside admin is student so authenticated is enough
+                        //add more if needed
+                        .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session -> session
