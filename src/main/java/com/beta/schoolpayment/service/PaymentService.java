@@ -44,6 +44,7 @@ public class PaymentService {
     private PaymentTypeRepository paymentTypeRepository;
 
     // ✅ Create Payment
+    // ✅ Create Payment with Allowed Payment Types
     public PaymentResponse createPayment(PaymentRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -53,6 +54,14 @@ public class PaymentService {
 
         PaymentType paymentType = paymentTypeRepository.findById(request.getPaymentTypeId())
                 .orElseThrow(() -> new RuntimeException("Payment Type not found"));
+
+        // ✅ List pembayaran yang diperbolehkan
+        List<String> allowedPaymentTypes = Arrays.asList("SPP", "UTS", "UAS", "Ekstrakurikuler", "Lainnya");
+
+        // ✅ Pastikan paymentType yang diinput valid
+        if (!allowedPaymentTypes.contains(paymentType.getPaymentTypeName())) {
+            throw new IllegalArgumentException("Jenis pembayaran tidak valid. Hanya diperbolehkan: " + allowedPaymentTypes);
+        }
 
         Payment payment = new Payment();
         payment.setPaymentName(request.getPaymentName());
@@ -67,6 +76,7 @@ public class PaymentService {
         return convertToResponse(savedPayment);
     }
 
+
     // ✅ Get Payment by ID
     public PaymentResponse getPaymentById(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -74,25 +84,16 @@ public class PaymentService {
         return convertToResponse(payment);
     }
 
+    // ✅ Get User Payments (Hanya untuk pengguna yang login & tidak soft deleted)
+    public List<PaymentResponse> getUserPayments(UUID userId) {
+        List<Payment> payments = paymentRepository.findByUser_UserIdAndDeletedAtIsNull(userId);
 
-    // ✅ Get All Payments
-    public List<PaymentResponse> getAllPayments() {
-        return paymentRepository.findAll().stream()
+        return payments.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
-    // ✅ Soft Delete Payment (Set deletedAt)
-    public void deletePayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-        // Soft delete by setting deletedAt instead of hard delete
-        payment.setDeletedAt(LocalDateTime.now());
-        paymentRepository.save(payment);
-    }
-
-
+    // ✅ Get All Payments (Dengan Pagination, Sorting, dan Filtering)
     public Page<PaymentResponse> getAllPayments(
             PaymentFilterCriteria criteria, int page, int size, String sortBy, String sortDirection) {
 
@@ -102,16 +103,33 @@ public class PaymentService {
         Specification<Payment> spec = new PaymentSpecification(criteria);
         Page<Payment> payments = paymentRepository.findAll(spec, pageable);
 
-        // Konversi Page<Payment> ke Page<PaymentResponse>
         return payments.map(this::convertToResponse);
     }
 
+    // ✅ Get All Active Payments (Tanpa soft delete)
+    public List<PaymentResponse> getAllActivePayments() {
+        return paymentRepository.findAll().stream()
+                .filter(payment -> payment.getDeletedAt() == null) // Hanya yang belum dihapus
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ✅ Soft Delete Payment (Set deletedAt)
+    public void deletePayment(UUID id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        payment.setDeletedAt(LocalDateTime.now()); // Soft delete
+        paymentRepository.save(payment);
+    }
+
+    // ✅ Update Payment Status
     public PaymentResponse updatePaymentStatus(UUID id, String status) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found with ID: " + id));
 
         // Validasi status pembayaran yang diperbolehkan
-        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED");
+        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED","COMPLETED");
         if (!validStatuses.contains(status.toUpperCase())) {
             throw new IllegalArgumentException("Invalid payment status. Allowed values: PENDING, PAID, CANCELED");
         }
@@ -122,9 +140,6 @@ public class PaymentService {
         Payment updatedPayment = paymentRepository.save(payment);
         return convertToResponse(updatedPayment);
     }
-
-
-
 
     // ✅ Convert Payment Entity to DTO Response
     private PaymentResponse convertToResponse(Payment payment) {
