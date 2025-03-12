@@ -7,8 +7,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 @Data
 public class UserRequest {
+    private UUID userId;
     private Long nis;
     private String name;
     private String email;
