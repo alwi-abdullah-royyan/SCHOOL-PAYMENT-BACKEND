@@ -44,7 +44,6 @@ public class PaymentService {
     private PaymentTypeRepository paymentTypeRepository;
 
     // ✅ Create Payment
-    // ✅ Create Payment with Allowed Payment Types
     public PaymentResponse createPayment(PaymentRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -54,14 +53,6 @@ public class PaymentService {
 
         PaymentType paymentType = paymentTypeRepository.findById(request.getPaymentTypeId())
                 .orElseThrow(() -> new RuntimeException("Payment Type not found"));
-
-        // ✅ List pembayaran yang diperbolehkan
-        List<String> allowedPaymentTypes = Arrays.asList("SPP", "UTS", "UAS", "Ekstrakurikuler", "Lainnya");
-
-        // ✅ Pastikan paymentType yang diinput valid
-        if (!allowedPaymentTypes.contains(paymentType.getPaymentTypeName())) {
-            throw new IllegalArgumentException("Jenis pembayaran tidak valid. Hanya diperbolehkan: " + allowedPaymentTypes);
-        }
 
         Payment payment = new Payment();
         payment.setPaymentName(request.getPaymentName());
@@ -75,7 +66,6 @@ public class PaymentService {
         Payment savedPayment = paymentRepository.save(payment);
         return convertToResponse(savedPayment);
     }
-
 
     // ✅ Get Payment by ID
     public PaymentResponse getPaymentById(UUID paymentId) {

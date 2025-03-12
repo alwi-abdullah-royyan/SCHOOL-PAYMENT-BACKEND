@@ -3,7 +3,9 @@ package com.beta.schoolpayment.controller;
 import com.beta.schoolpayment.dto.request.PaymentFilterCriteria;
 import com.beta.schoolpayment.dto.request.PaymentRequest;
 import com.beta.schoolpayment.dto.response.PaymentResponse;
+import com.beta.schoolpayment.security.CustomUserDetails;
 import com.beta.schoolpayment.service.PaymentExportService;
+import com.beta.schoolpayment.service.PaymentReceiptService;
 import com.beta.schoolpayment.service.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -32,6 +35,9 @@ public class PaymentController {
 
     @Autowired
     private PaymentExportService paymentExportService;
+
+    @Autowired
+    private PaymentReceiptService paymentReceiptService;
 
     // 🔹 Endpoint untuk membuat pembayaran baru
     @PostMapping
@@ -62,7 +68,6 @@ public class PaymentController {
             @RequestParam(defaultValue = "desc") String sortDirection
     ) {
         try {
-            // 🔹 Pastikan sortDirection hanya "asc" atau "desc"
             sortDirection = sortDirection.equalsIgnoreCase("asc") ? "asc" : "desc";
 
             PaymentFilterCriteria criteria = new PaymentFilterCriteria();
@@ -106,14 +111,12 @@ public class PaymentController {
     @PutMapping("/status/{id}")
     public ResponseEntity<?> updatePaymentStatus(@PathVariable UUID id, @RequestBody Map<String, String> requestBody) {
         try {
-            // ✅ Validasi status tidak boleh null atau kosong
             if (!requestBody.containsKey("status") || requestBody.get("status").trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Status tidak boleh kosong"));
             }
 
             String status = requestBody.get("status");
 
-            // Panggil service untuk update status pembayaran
             PaymentResponse updatedPayment = paymentService.updatePaymentStatus(id, status);
 
             return ResponseEntity.ok(updatedPayment);
@@ -127,11 +130,11 @@ public class PaymentController {
         }
     }
 
-    // 🔹 Endpoint untuk export payments ke Excel
+    // 🔹 Endpoint untuk export payments ke Excel (✅ Diperbaiki)
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportPaymentsToExcel() {
         try {
-            List<PaymentResponse> payments = paymentService.getAllPayments();
+            List<PaymentResponse> payments = paymentService.getAllActivePayments(); // ✅ Mengambil semua pembayaran aktif
             byte[] excelData = paymentExportService.exportPaymentsToExcel(payments);
 
             return ResponseEntity.ok()
@@ -140,6 +143,52 @@ public class PaymentController {
                     .body(excelData);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    // 🔹 Mendapatkan pembayaran user yang sedang login
+    @GetMapping("/user")
+    public ResponseEntity<List<PaymentResponse>> getUserPayments(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        UUID userId = userDetails.getUserId();
+        List<PaymentResponse> payments = paymentService.getUserPayments(userId);
+        return ResponseEntity.ok(payments);
+    }
+
+    // 🔹 DELETE (Soft Delete) Payment (✅ Diperbaiki)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePayment(@PathVariable UUID id) {
+        try {
+            paymentService.deletePayment(id);
+            return ResponseEntity.ok(Map.of("message", "Payment deleted successfully"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Payment not found"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Terjadi kesalahan pada server: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/receipt/{id}")
+    public ResponseEntity<?> downloadPaymentReceipt(@PathVariable UUID id) {
+        try {
+            PaymentResponse payment = paymentService.getPaymentById(id);
+
+            // Pastikan pembayaran memiliki status "LUNAS"
+            if (!"COMPLETED".equalsIgnoreCase(payment.getPaymentStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Receipt hanya tersedia untuk pembayaran COMPLETED"));
+            }
+
+            byte[] pdfBytes = paymentReceiptService.generatePaymentReceipt(payment);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=receipt_" + id + ".pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Gagal mengunduh tanda terima: " + e.getMessage()));
         }
     }
 }
