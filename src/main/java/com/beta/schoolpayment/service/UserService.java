@@ -44,8 +44,7 @@ import java.util.UUID;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
+    private final StudentRepository studentRepository;
 
     @Autowired
     @Lazy
@@ -56,13 +55,13 @@ public class UserService implements UserDetailsService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Value("${file.IMAGE_DIR}")
-    private String imageDirectory;
+    private static final String imageDirectory="src/main/resources/static/images";
     private static final String[] allowedFileTypes = {"image/jpeg", "image/png", "image/jpg"};
 
     @Autowired
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, StudentRepository studentRepository) {
         this.userRepository =userRepository;
+        this.studentRepository = studentRepository;
         this.passwordEncoder=new BCryptPasswordEncoder();
     }
     @Override
@@ -77,7 +76,7 @@ public class UserService implements UserDetailsService {
     }
 
     // Method tambahan untuk konversi NIS jika memungkinkan
-    private Long convertNis(String input) {
+    public Long convertNis(String input) {
         try {
             return Long.parseLong(input);
         } catch (NumberFormatException e) {
@@ -180,7 +179,7 @@ public class UserService implements UserDetailsService {
         userRepository.delete(user);
     }
     //Validasi file
-    private static void validateFile(MultipartFile file){
+    public static void validateFile(MultipartFile file){
         long maxFileSize = 5 * 1024 * 1024; // 5MB
         if (file.getSize() > maxFileSize) {
             throw new ValidationException("File size must be less than 5MB");
@@ -213,7 +212,7 @@ public class UserService implements UserDetailsService {
             user.setEmail(userRequest.getEmail());
         }
         if (userRequest.getPassword() != null) {
-            if (userRequest.getPassword().length() >= 8) {
+            if (userRequest.getPassword().length() <= 8) {
                 throw new ValidationException("Password must be at least 8 characters");
             }
             if (!userRequest.getPassword().equals(userRequest.getConfirmPassword())){
@@ -222,11 +221,14 @@ public class UserService implements UserDetailsService {
             user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         }
         if(userRequest.getProfilePicture() != null && !userRequest.getProfilePicture().isEmpty()) {
+            System.out.println(imageDirectory);
             MultipartFile file = userRequest.getProfilePicture();
             validateFile(file);
             String uniqueFileName = generateUniqueFileName(Objects.requireNonNull(file.getOriginalFilename()));
             String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
             Path fullPath = Path.of(imageDirectory, datePath, uniqueFileName);
+            System.out.println("File original name: " + fullPath);
+
             Path imagePath = Path.of(datePath, uniqueFileName);
 
             try {
@@ -244,15 +246,10 @@ public class UserService implements UserDetailsService {
     public byte[] getImageById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
-
-        if (user.getProfilePicture() == null) {
-            throw new DataNotFoundException("Profile picture not found for user: " + userId);
-        }
-
         Path imagePath = Path.of(imageDirectory, user.getProfilePicture());
-
+        System.out.println(imagePath);
         if (!Files.exists(imagePath)) {
-            throw new DataNotFoundException("Profile picture file not found at: " + imagePath);
+            throw new DataNotFoundException("Profile picture not found for user: " + userId);
         }
 
         try {
