@@ -1,5 +1,6 @@
 package com.beta.schoolpayment.service;
 
+import com.beta.schoolpayment.dto.request.PaymentFilterCriteria;
 import com.beta.schoolpayment.dto.request.PaymentRequest;
 import com.beta.schoolpayment.dto.response.PaymentResponse;
 import com.beta.schoolpayment.model.Payment;
@@ -10,10 +11,19 @@ import com.beta.schoolpayment.repository.PaymentRepository;
 import com.beta.schoolpayment.repository.PaymentTypeRepository;
 import com.beta.schoolpayment.repository.StudentRepository;
 import com.beta.schoolpayment.repository.UserRepository;
+import com.beta.schoolpayment.specification.PaymentSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -60,9 +70,10 @@ public class PaymentService {
     // ✅ Get Payment by ID
     public PaymentResponse getPaymentById(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Payment dengan ID " + paymentId + " tidak ditemukan"));
         return convertToResponse(payment);
     }
+
 
     // ✅ Get All Payments
     public List<PaymentResponse> getAllPayments() {
@@ -80,6 +91,40 @@ public class PaymentService {
         payment.setDeletedAt(LocalDateTime.now());
         paymentRepository.save(payment);
     }
+
+
+    public Page<PaymentResponse> getAllPayments(
+            PaymentFilterCriteria criteria, int page, int size, String sortBy, String sortDirection) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Payment> spec = new PaymentSpecification(criteria);
+        Page<Payment> payments = paymentRepository.findAll(spec, pageable);
+
+        // Konversi Page<Payment> ke Page<PaymentResponse>
+        return payments.map(this::convertToResponse);
+    }
+
+    public PaymentResponse updatePaymentStatus(UUID id, String status) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Payment not found with ID: " + id));
+
+        // Validasi status pembayaran yang diperbolehkan
+        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED");
+        if (!validStatuses.contains(status.toUpperCase())) {
+            throw new IllegalArgumentException("Invalid payment status. Allowed values: PENDING, PAID, CANCELED");
+        }
+
+        payment.setPaymentStatus(status.toUpperCase());
+        payment.setUpdatedAt(LocalDateTime.now());
+
+        Payment updatedPayment = paymentRepository.save(payment);
+        return convertToResponse(updatedPayment);
+    }
+
+
+
 
     // ✅ Convert Payment Entity to DTO Response
     private PaymentResponse convertToResponse(Payment payment) {
