@@ -66,13 +66,9 @@ public class UserService implements UserDetailsService {
     }
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        return userRepository.findByEmailOrNis(usernameOrEmail, convertNis(usernameOrEmail))
-                .map(user -> new org.springframework.security.core.userdetails.User(
-                        user.getEmail(), // Tetap gunakan email sebagai username utama
-                        user.getPassword(),
-                        new ArrayList<>()
-                ))
+        User user = userRepository.findByEmailOrNis(usernameOrEmail, convertNis(usernameOrEmail))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return new CustomUserDetails(user);
     }
 
     // Method tambahan untuk konversi NIS jika memungkinkan
