@@ -11,10 +11,8 @@ public class PaymentResponse {
     private UUID paymentId;
     private String paymentName;
     private UUID userId;
-    private Long studentId;
-    private String studentName;
-    private Long paymentTypeId;
-    private String paymentTypeName;
+    private StudentResponse student;
+    private PaymentTypeResponse paymentType;
     private BigDecimal amount;
     private String paymentStatus;
     private String description;

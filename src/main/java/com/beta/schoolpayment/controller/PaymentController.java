@@ -9,7 +9,9 @@ import com.beta.schoolpayment.service.PaymentReceiptService;
 import com.beta.schoolpayment.service.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -41,16 +44,22 @@ public class PaymentController {
 
     // 🔹 Endpoint untuk membuat pembayaran baru
     @PostMapping
-    public ResponseEntity<?> createPayment(@RequestBody @Valid PaymentRequest paymentRequest) {
+    public ResponseEntity<?> createPayment(
+            @RequestBody @Valid PaymentRequest paymentRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            PaymentResponse paymentResponse = paymentService.createPayment(paymentRequest);
+            PaymentResponse paymentResponse = paymentService.createPayment(paymentRequest, userDetails);
             return ResponseEntity.ok(paymentResponse);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Internal Server Error"));
         }
     }
+
+
 
     // 🔹 Endpoint untuk mendapatkan semua pembayaran
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -93,7 +102,8 @@ public class PaymentController {
         }
     }
 
-    // 🔹 Endpoint untuk mendapatkan pembayaran berdasarkan ID
+    // 🔹 Endpoint untuk mendapatkan pembayaran berdasarkan
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentById(@PathVariable UUID id) {
         try {
@@ -108,6 +118,7 @@ public class PaymentController {
     }
 
     // 🔹 Endpoint untuk update status pembayaran
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/status/{id}")
     public ResponseEntity<?> updatePaymentStatus(@PathVariable UUID id, @RequestBody Map<String, String> requestBody) {
         try {
@@ -131,6 +142,7 @@ public class PaymentController {
     }
 
     // 🔹 Endpoint untuk export payments ke Excel (✅ Diperbaiki)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportPaymentsToExcel() {
         try {
@@ -147,13 +159,25 @@ public class PaymentController {
     }
 
     // 🔹 Mendapatkan pembayaran user yang sedang login
+
+    @PreAuthorize("hasAnyRole('STUDENT')")
     @GetMapping("/user")
-    public ResponseEntity<List<PaymentResponse>> getUserPayments(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<?> getUserPayments(@AuthenticationPrincipal CustomUserDetails userDetails) {
         UUID userId = userDetails.getUserId();
         List<PaymentResponse> payments = paymentService.getUserPayments(userId);
+
+        if (payments.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
         return ResponseEntity.ok(payments);
     }
+
+
+
+
+
+
 
     // 🔹 DELETE (Soft Delete) Payment (✅ Diperbaiki)
     @DeleteMapping("/{id}")
@@ -169,6 +193,7 @@ public class PaymentController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STUDENT')")
     @GetMapping("/receipt/{id}")
     public ResponseEntity<?> downloadPaymentReceipt(@PathVariable UUID id) {
         try {
@@ -191,4 +216,10 @@ public class PaymentController {
                     .body(Map.of("error", "Gagal mengunduh tanda terima: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/debug-role")
+    public ResponseEntity<?> debugRole(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(userDetails.getAuthorities());
+    }
+
 }

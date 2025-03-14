@@ -13,13 +13,16 @@ import com.beta.schoolpayment.repository.StudentRepository;
 import com.beta.schoolpayment.repository.UserRepository;
 import com.beta.schoolpayment.specification.PaymentSpecification;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,14 +47,16 @@ public class PaymentService {
     private PaymentTypeRepository paymentTypeRepository;
 
     // ✅ Create Payment
-    // ✅ Create Payment with Allowed Payment Types
-    public PaymentResponse createPayment(PaymentRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public PaymentResponse createPayment(PaymentRequest request, UserDetails userDetails) {
+        // Ambil user berdasarkan email dari token JWT
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
+        // Cari student berdasarkan studentId dari request
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        // Cari jenis pembayaran
         PaymentType paymentType = paymentTypeRepository.findById(request.getPaymentTypeId())
                 .orElseThrow(() -> new RuntimeException("Payment Type not found"));
 
@@ -63,6 +68,7 @@ public class PaymentService {
             throw new IllegalArgumentException("Jenis pembayaran tidak valid. Hanya diperbolehkan: " + allowedPaymentTypes);
         }
 
+        // Buat objek Payment
         Payment payment = new Payment();
         payment.setPaymentName(request.getPaymentName());
         payment.setUser(user);
@@ -72,9 +78,11 @@ public class PaymentService {
         payment.setPaymentStatus(request.getPaymentStatus());
         payment.setDescription(request.getDescription());
 
+        // Simpan ke database
         Payment savedPayment = paymentRepository.save(payment);
         return convertToResponse(savedPayment);
     }
+
 
 
     // ✅ Get Payment by ID
@@ -84,7 +92,7 @@ public class PaymentService {
         return convertToResponse(payment);
     }
 
-    // ✅ Get User Payments (Hanya untuk pengguna yang login & tidak soft deleted)
+    // ✅ Get User Payments (Hanya untuk pengguna yang login & tanpa soft deleted)
     public List<PaymentResponse> getUserPayments(UUID userId) {
         List<Payment> payments = paymentRepository.findByUser_UserIdAndDeletedAtIsNull(userId);
 
@@ -92,6 +100,7 @@ public class PaymentService {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+
 
     // ✅ Get All Payments (Dengan Pagination, Sorting, dan Filtering)
     public Page<PaymentResponse> getAllPayments(
@@ -148,7 +157,9 @@ public class PaymentService {
         response.setPaymentName(payment.getPaymentName());
         response.setUserId(payment.getUser().getUserId());
         response.setStudentId(payment.getStudent().getId());
+        response.setStudentName(payment.getStudent().getName());
         response.setPaymentTypeId(Long.valueOf(payment.getPaymentType().getPaymentTypeId()));
+        response.setPaymentTypeName(payment.getPaymentType().getPaymentTypeName());
         response.setAmount(payment.getAmount());
         response.setPaymentStatus(payment.getPaymentStatus());
         response.setDescription(payment.getDescription());

@@ -21,7 +21,7 @@ public class PaymentReceiptService {
             document.add(new Paragraph("TANDA TERIMA PEMBAYARAN"));
             document.add(new Paragraph("ID Pembayaran: " + payment.getPaymentId()));
             document.add(new Paragraph("Nama Pembayaran: " + payment.getPaymentName()));
-            document.add(new Paragraph("Nama Siswa: " + payment.getStudentName()));
+            document.add(new Paragraph("Nama Siswa: " + payment.getStudentId()));
             document.add(new Paragraph("Jumlah: Rp " + payment.getAmount()));
             document.add(new Paragraph("Status: " + payment.getPaymentStatus()));
             document.add(new Paragraph("Tanggal Pembayaran: " + payment.getUpdatedAt()));

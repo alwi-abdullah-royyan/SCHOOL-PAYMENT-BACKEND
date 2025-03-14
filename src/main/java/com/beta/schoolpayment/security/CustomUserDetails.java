@@ -67,4 +67,7 @@ public class CustomUserDetails implements UserDetails {
     public Long getNis() {
         return user.getNis();
     }
+
+
 }
+
