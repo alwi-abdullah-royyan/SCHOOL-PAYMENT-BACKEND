@@ -23,46 +23,75 @@ public class PaymentTypeController {
 
     // ✅ Create Payment Type
     @PostMapping
-    public ResponseEntity<PaymentTypeResponse> createPaymentType(@Valid @RequestBody PaymentTypeRequest request) {
-        return ResponseEntity.ok(paymentTypeService.createPaymentType(request));
+    public ResponseEntity<?> createPaymentType(@Valid @RequestBody PaymentTypeRequest request) {
+        try {
+            PaymentTypeResponse response = paymentTypeService.createPaymentType(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating payment type: " + e.getMessage());
+        }
     }
 
     // ✅ Get All Payment Types
     @GetMapping
-    public ResponseEntity<List<PaymentTypeResponse>> getAllPaymentTypes() {
-        return ResponseEntity.ok(paymentTypeService.getAllPaymentTypes());
+    public ResponseEntity<?> getAllPaymentTypes() {
+        try {
+            List<PaymentTypeResponse> paymentTypes = paymentTypeService.getAllPaymentTypes();
+            return ResponseEntity.ok(paymentTypes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching payment types: " + e.getMessage());
+        }
     }
 
     // ✅ Search Payment Type by Query
     @GetMapping("/search")
-    public ResponseEntity<List<PaymentTypeResponse>> searchPaymentType(@RequestParam String query) {
-        return ResponseEntity.ok(paymentTypeService.searchPaymentType(query));
+    public ResponseEntity<?> searchPaymentType(@RequestParam String query) {
+        try {
+            List<PaymentTypeResponse> results = paymentTypeService.searchPaymentType(query);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error searching payment types: " + e.getMessage());
+        }
     }
 
-    // ✅ Update Payment Type
     @PutMapping("/{id}")
-    public ResponseEntity<Optional<PaymentTypeResponse>> updatePaymentType(
-            @PathVariable Long id,
-            @Valid @RequestBody PaymentTypeRequest request) {
-        return ResponseEntity.ok(paymentTypeService.updatePaymentType(id, request));
+    public ResponseEntity<?> updatePaymentType(@PathVariable Long id, @Valid @RequestBody PaymentTypeRequest request) {
+        try {
+            Optional<PaymentTypeResponse> updatedPaymentType = paymentTypeService.updatePaymentType(id, request);
+
+            if (updatedPaymentType.isPresent()) {
+                return ResponseEntity.ok(updatedPaymentType.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Payment Type not found", "id", String.valueOf(id)));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error updating payment type", "message", e.getMessage()));
+        }
     }
 
     // ✅ Delete Payment Type (Soft Delete)
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePaymentType(@PathVariable Long id) {
-        boolean isDeleted = paymentTypeService.deletePaymentType(id);
-        return isDeleted ? ResponseEntity.ok("Payment Type deleted successfully")
-                : ResponseEntity.badRequest().body("Payment Type not found");
-    }
-
-    @DeleteMapping("/hard-delete/{id}")
-    public ResponseEntity<String> hardDeletePaymentType(@PathVariable Long id) {
-        boolean deleted = paymentTypeService.hardDeletePaymentType(id);
-        if (deleted) {
-            return ResponseEntity.ok("Payment Type successfully deleted permanently.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment Type not found or already deleted.");
+    public ResponseEntity<?> deletePaymentType(@PathVariable Long id) {
+        try {
+            boolean isDeleted = paymentTypeService.deletePaymentType(id);
+            return isDeleted ? ResponseEntity.ok("Payment Type deleted successfully")
+                    : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment Type not found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting payment type: " + e.getMessage());
         }
     }
 
+    // ✅ Hard Delete Payment Type
+    @DeleteMapping("/hard-delete/{id}")
+    public ResponseEntity<?> hardDeletePaymentType(@PathVariable Long id) {
+        try {
+            boolean deleted = paymentTypeService.hardDeletePaymentType(id);
+            return deleted ? ResponseEntity.ok("Payment Type successfully deleted permanently.")
+                    : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment Type not found or already deleted.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error permanently deleting payment type: " + e.getMessage());
+        }
+    }
 }

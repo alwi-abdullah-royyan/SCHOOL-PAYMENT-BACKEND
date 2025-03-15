@@ -18,7 +18,7 @@ public class PaymentExportService {
 
             // 🔹 Buat header row
             Row headerRow = sheet.createRow(0);
-            String[] columns = {"Payment ID", "Payment Name", "User ID", "Student ID", "Amount", "Status", "Created At"};
+            String[] columns = {"Payment ID", "Payment Name", "User ID", "Student ID","Student Name", "Amount", "Status", "Created At"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -32,10 +32,11 @@ public class PaymentExportService {
                 row.createCell(0).setCellValue(payment.getPaymentId().toString());
                 row.createCell(1).setCellValue(payment.getPaymentName());
                 row.createCell(2).setCellValue(payment.getUserId().toString());
-                row.createCell(3).setCellValue(payment.getStudentId());
-                row.createCell(4).setCellValue(payment.getAmount().doubleValue());
-                row.createCell(5).setCellValue(payment.getPaymentStatus());
-                row.createCell(6).setCellValue(payment.getCreatedAt().toString());
+                row.createCell(3).setCellValue(payment.getStudentName());
+                row.createCell(4).setCellValue(payment.getStudentId());
+                row.createCell(5).setCellValue(payment.getAmount().doubleValue());
+                row.createCell(6).setCellValue(payment.getPaymentStatus());
+                row.createCell(7).setCellValue(payment.getCreatedAt().toString());
             }
 
             // 🔹 Auto-size kolom

@@ -12,10 +12,10 @@ public class PaymentResponse {
     private String paymentName;
     private UUID userId;
     private Long studentId;
+    private String studentName;
     private Long paymentTypeId;
-    private BigDecimal amount;
-    private String paymentStatus;
-    private String description;
+    private String paymentTypeName;
+
 
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
