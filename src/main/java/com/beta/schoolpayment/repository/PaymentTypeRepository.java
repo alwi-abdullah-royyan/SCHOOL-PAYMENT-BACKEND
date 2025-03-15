@@ -12,11 +12,13 @@ import java.util.Optional;
 
 @Repository
 public interface PaymentTypeRepository extends JpaRepository<PaymentType, Long> {
+    
     Optional<PaymentType> findByPaymentTypeName(String paymentTypeName);
+
     @Query("SELECT p FROM PaymentType p WHERE LOWER(p.paymentTypeName) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<PaymentType> searchByName(String query);
+    List<PaymentType> searchByName(@Param("query") String query);
+
     @Modifying
     @Query("DELETE FROM PaymentType p WHERE p.paymentTypeId = :id")
     void hardDeleteById(@Param("id") Long id);
-
 }

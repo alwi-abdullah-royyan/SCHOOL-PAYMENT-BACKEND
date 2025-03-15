@@ -13,15 +13,12 @@ import com.beta.schoolpayment.repository.StudentRepository;
 import com.beta.schoolpayment.repository.UserRepository;
 import com.beta.schoolpayment.specification.PaymentSpecification;
 import jakarta.persistence.EntityNotFoundException;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -54,11 +51,11 @@ public class PaymentService {
 
         // Cari student berdasarkan studentId dari request
         Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student tidak ditemukan"));
 
         // Cari jenis pembayaran
         PaymentType paymentType = paymentTypeRepository.findById(request.getPaymentTypeId())
-                .orElseThrow(() -> new RuntimeException("Payment Type not found"));
+                .orElseThrow(() -> new RuntimeException("Jenis pembayaran tidak ditemukan"));
 
         // ✅ List pembayaran yang diperbolehkan
         List<String> allowedPaymentTypes = Arrays.asList("SPP", "UTS", "UAS", "Ekstrakurikuler", "Lainnya");
@@ -83,8 +80,6 @@ public class PaymentService {
         return convertToResponse(savedPayment);
     }
 
-
-
     // ✅ Get Payment by ID
     public PaymentResponse getPaymentById(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -100,7 +95,6 @@ public class PaymentService {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
-
 
     // ✅ Get All Payments (Dengan Pagination, Sorting, dan Filtering)
     public Page<PaymentResponse> getAllPayments(
@@ -126,7 +120,7 @@ public class PaymentService {
     // ✅ Soft Delete Payment (Set deletedAt)
     public void deletePayment(UUID id) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new RuntimeException("Payment tidak ditemukan"));
 
         payment.setDeletedAt(LocalDateTime.now()); // Soft delete
         paymentRepository.save(payment);
@@ -135,12 +129,12 @@ public class PaymentService {
     // ✅ Update Payment Status
     public PaymentResponse updatePaymentStatus(UUID id, String status) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found with ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Payment tidak ditemukan dengan ID: " + id));
 
         // Validasi status pembayaran yang diperbolehkan
-        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED","COMPLETED");
+        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED", "COMPLETED");
         if (!validStatuses.contains(status.toUpperCase())) {
-            throw new IllegalArgumentException("Invalid payment status. Allowed values: PENDING, PAID, CANCELED");
+            throw new IllegalArgumentException("Status pembayaran tidak valid. Pilihan: PENDING, PAID, CANCELED, COMPLETED");
         }
 
         payment.setPaymentStatus(status.toUpperCase());

@@ -15,9 +15,7 @@ public class PaymentResponse {
     private String studentName;
     private Long paymentTypeId;
     private String paymentTypeName;
-    private BigDecimal amount;
-    private String paymentStatus;
-    private String description;
+
 
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

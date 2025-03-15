@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpecificationExecutor<Payment> {
     List<Payment> findByUser_UserId(UUID userId);
-    List<Payment> findByStudent_Id(Long Id);
+    List<Payment> findByStudent_Id(Long id);
     List<Payment> findByUser_Nis(Long nis);
     Page<Payment> findByPaymentStatus(String paymentStatus, Pageable pageable);
     List<Payment> findByUser_UserIdAndDeletedAtIsNull(UUID userId);
