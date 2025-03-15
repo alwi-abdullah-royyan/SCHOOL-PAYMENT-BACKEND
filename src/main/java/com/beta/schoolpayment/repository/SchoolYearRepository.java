@@ -10,5 +10,4 @@ import java.util.Optional;
 public interface SchoolYearRepository extends JpaRepository<SchoolYear, Long> {
     List<SchoolYear> findBySchoolYearContainingIgnoringCase(String schoolYear);
     Optional<SchoolYear> findByStartDateAndEndDate(LocalDate startDate, LocalDate endDate);
-
 }
