@@ -1,0 +1,4 @@
+package com.beta.schoolpayment.model;
+
+public class SchoolYearTest {
+}
