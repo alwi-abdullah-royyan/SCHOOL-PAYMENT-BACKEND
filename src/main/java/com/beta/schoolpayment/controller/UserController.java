@@ -66,6 +66,41 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+    @GetMapping
+    public ResponseEntity<?> me(Authentication authentication) {
+        try {
+            UserResponse userResponse = userService.me(authentication);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), userResponse));
+        } catch (DataNotFoundException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                    "Data Not Found",
+                    e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal Server Error",
+                    "An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
+        try {
+            UserResponse userResponse = userService.getUserById(id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), userResponse));
+        } catch (DataNotFoundException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                    "Data Not Found",
+                    e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal Server Error",
+                    "An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+    }
     @PutMapping(consumes="multipart/form-data")
     public ResponseEntity<?> updateUser(@Valid @ModelAttribute @RequestBody UserRequest userRequest, Authentication authentication) {
         try {

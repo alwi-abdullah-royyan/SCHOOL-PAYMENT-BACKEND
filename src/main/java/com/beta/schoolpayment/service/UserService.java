@@ -136,7 +136,16 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Invalid authentication");
         }
     }
-
+    public UserResponse me(Authentication authentication) {
+        UserDetails auth = (UserDetails) authentication.getPrincipal();
+        String username = auth.getUsername();
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new DataNotFoundException("User not found"));
+        return convertToResponse(user);
+    }
+    public UserResponse getUserById(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        return convertToResponse(user);
+    }
     public Page<UserResponse> getAllUser(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<User> user = userRepository.findAll(pageable);
