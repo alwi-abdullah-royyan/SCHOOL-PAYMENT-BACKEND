@@ -66,7 +66,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
         try {
             UserResponse userResponse = userService.me(authentication);

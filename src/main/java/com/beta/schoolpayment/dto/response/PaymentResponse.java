@@ -10,6 +10,9 @@ import java.util.UUID;
 public class PaymentResponse {
     private UUID paymentId;
     private String paymentName;
+    private String paymentStatus;
+    private BigDecimal amount;
+    private String description;
     private UUID userId;
     private Long studentId;
     private String studentName;
