@@ -157,7 +157,12 @@ public class UserService implements UserDetailsService {
         Page<User> userPage = userRepository.findByRoleOrderByUpdatedAtDesc(role, pageable);
         return userPage.map(this::convertToResponse);
     }
-
+    public AuthResponse refreshToken(Authentication authentication) {
+        UserDetails auth = (UserDetails) authentication.getPrincipal();
+        String username = auth.getUsername();
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new DataNotFoundException("User not found"));
+        return new AuthResponse(jwtUtil.generateToken(user));
+    }
     @Transactional
     public UserResponse updateRole(UUID userId, UserRequest userRequest) {
         if (userRequest.getRole() == null) {
