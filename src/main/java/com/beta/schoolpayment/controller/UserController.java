@@ -101,6 +101,23 @@ public class UserController {
         }
 
     }
+    @GetMapping("/me/refresh")
+    public ResponseEntity<?> refreshToken(Authentication authentication) {
+        try {
+            String token = userService.refreshToken(authentication).getToken();
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), token));
+        } catch (DataNotFoundException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                    "Data Not Found",
+                    e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal Server Error",
+                    "An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
     @PutMapping(consumes="multipart/form-data")
     public ResponseEntity<?> updateUser(@Valid @ModelAttribute @RequestBody UserRequest userRequest, Authentication authentication) {
         try {
