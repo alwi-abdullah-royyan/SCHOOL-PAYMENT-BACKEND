@@ -42,7 +42,26 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(new ApiResponse<>(200, studentService.getStudentById(id)));
+        } catch (DataNotFoundException e) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.NOT_FOUND.value(),
+                    "Data Not Found",
+                    e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal Server Error",
+                    "An unexpected error occurred."
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
     @PostMapping
     public ResponseEntity<?> createStudent(@RequestBody StudentRequest studentRequest) {
         try {
@@ -152,8 +171,8 @@ public class StudentController {
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
-            Page<Student> students = studentService.getStudents(search, startDate, endDate, sort, page, size);
-            return ResponseEntity.ok(students);
+            Page<StudentResponse> response = studentService.getStudents(search, startDate, endDate, sort, page, size);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "error",

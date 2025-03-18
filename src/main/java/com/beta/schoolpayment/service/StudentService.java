@@ -35,7 +35,11 @@ public class StudentService {
 
         return students.map(StudentService::convertToResponse);
     }
-
+    public StudentResponse getStudentById(Long id){
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("Student not found"));
+        return convertToResponse(student);
+    }
     @Transactional
     public StudentResponse createStudent(StudentRequest studentRequest) {
         // Cek apakah NIS sudah ada di database
@@ -99,15 +103,16 @@ public class StudentService {
 
 
 
-    public Page<Student> getStudents(String search, LocalDate startDate, LocalDate endDate, String sort, int page, int size) {
+    public Page<StudentResponse> getStudents(String search, LocalDate startDate, LocalDate endDate, String sort, int page, int size) {
         // Pastikan search tidak null (menghindari error LOWER(NULL))
         search = (search == null) ? "" : search;
 
         // Atur sorting berdasarkan nama
         Sort sortBy = Sort.by(sort.equalsIgnoreCase("desc") ? Sort.Order.desc("name") : Sort.Order.asc("name"));
         Pageable pageable = PageRequest.of(page, size, sortBy);
+        Page<Student> students = studentRepository.findStudents(search, startDate, endDate, pageable);
 
-        return studentRepository.findStudents(search, startDate, endDate, pageable);
+        return students.map(StudentService::convertToResponse);
     }
 
 
