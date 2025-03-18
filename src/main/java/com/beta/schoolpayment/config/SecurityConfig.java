@@ -44,7 +44,7 @@ public class SecurityConfig {
                         //admin authenticated
                         .requestMatchers(HttpMethod.GET, "/api/users/filter", "/api/users", "/api/students",
                                 "/api/students/search", "/api/school-years/search","/api/school-years/all",
-                                "/api/payments","/api/classes/search","/api/classes/all").hasRole("ADMIN")
+                                "/api/payments","/api/classes/search","/api/classes/all","/api/students/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/students", "/api/school-years/create",
                                 "/api/classes/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT,"/api/users/role/{id}", "/api/students/{id}",
