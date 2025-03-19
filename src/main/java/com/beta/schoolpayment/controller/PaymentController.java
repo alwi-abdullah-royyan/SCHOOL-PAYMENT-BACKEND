@@ -57,7 +57,7 @@ public class PaymentController {
     // 🔹 Endpoint untuk mendapatkan semua pembayaran
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<?> getPayments(
+    public ResponseEntity<?> getAllPayments(
             @RequestParam(required = false) String paymentName,
             @RequestParam(required = false) String studentName,
             @RequestParam(required = false) String userName,
