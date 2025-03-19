@@ -8,6 +8,9 @@ import com.beta.schoolpayment.repository.ClassesRepository;
 import com.beta.schoolpayment.repository.SchoolYearRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,12 +25,11 @@ public class ClassesService {
     @Autowired
     private SchoolYearRepository schoolYearRepository;
 
-    public List<ClassesResponse> findAll() {
+    public Page<ClassesResponse> findAll(int page, int size) {
         try {
-            return classesRepository.findAll()
-                    .stream()
-                    .map(this::convertToResponse)
-                    .toList();
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Classes> classes = classesRepository.findAll(pageable);
+            return classes.map(this::convertToResponse);
         } catch (Exception e) {
             throw new RuntimeException("Failed to get all classes", e);
         }
@@ -81,12 +83,11 @@ public class ClassesService {
         }
     }
 
-    public List<ClassesResponse> searchClasses(String classesName) {
+    public Page<ClassesResponse> searchClasses(String classesName, int page, int size) {
         try {
-            return classesRepository.findByClassesNameContainingIgnoringCase(classesName)
-                    .stream()
-                    .map(this::convertToResponse)
-                    .collect(Collectors.toList());
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Classes> classes = classesRepository.findByClassesNameContainingIgnoringCase(classesName, pageable);
+            return classes.map(this::convertToResponse);
         } catch (Exception e) {
             throw new RuntimeException("Failed to search classes", e);
         }

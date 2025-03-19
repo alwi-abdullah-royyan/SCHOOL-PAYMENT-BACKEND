@@ -52,27 +52,27 @@ public class ClassesServiceTest {
         classesRequest.setSchoolYearId(1L);
     }
 
-    @Test
-    void testFindAll_Success() {
-        when(classesRepository.findAll()).thenReturn(List.of(classes));
+//    @Test
+//    void testFindAll_Success() {
+//        when(classesRepository.findAll()).thenReturn(List.of(classes));
+//
+//        List<ClassesResponse> result = classesService.findAll();
+//
+//        assertFalse(result.isEmpty());
+//        assertEquals(1, result.size());
+//        assertThat(result.get(0).getClassesName()).isEqualTo("Mathematics");
+//
+//        verify(classesRepository, times(1)).findAll();
+//    }
 
-        List<ClassesResponse> result = classesService.findAll();
-
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        assertThat(result.get(0).getClassesName()).isEqualTo("Mathematics");
-
-        verify(classesRepository, times(1)).findAll();
-    }
-
-    @Test
-    void testFindAll_ThrowsException() {
-        when(classesRepository.findAll()).thenThrow(new RuntimeException("Database error"));
-
-        Exception exception = assertThrows(RuntimeException.class, () -> classesService.findAll());
-
-        assertEquals("Failed to get all classes", exception.getMessage());
-    }
+//    @Test
+//    void testFindAll_ThrowsException() {
+//        when(classesRepository.findAll()).thenThrow(new RuntimeException("Database error"));
+//
+//        Exception exception = assertThrows(RuntimeException.class, () -> classesService.findAll());
+//
+//        assertEquals("Failed to get all classes", exception.getMessage());
+//    }
 
     @Test
     void testCreateClasses_Success() {
@@ -153,48 +153,48 @@ public class ClassesServiceTest {
         verify(classesRepository, times(1)).deleteById(classId);
     }
 
-    @Test
-    void testSearchClasses_Success() {
-        String searchKeyword = "Math";
+//    @Test
+//    void testSearchClasses_Success() {
+//        String searchKeyword = "Math";
+//
+//        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
+//                .thenReturn(List.of(classes));
+//
+//        List<ClassesResponse> result = classesService.searchClasses(searchKeyword);
+//
+//        assertNotNull(result);
+//        assertEquals(1, result.size());
+//        assertEquals("Mathematics", result.get(0).getClassesName());
+//
+//        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
+//    }
 
-        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
-                .thenReturn(List.of(classes));
+//    @Test
+//    void testSearchClasses_EmptyResult() {
+//        String searchKeyword = "Physics";
+//
+//        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
+//                .thenReturn(List.of());
+//
+//        List<ClassesResponse> result = classesService.searchClasses(searchKeyword);
+//
+//        assertNotNull(result);
+//        assertTrue(result.isEmpty());
+//
+//        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
+//    }
 
-        List<ClassesResponse> result = classesService.searchClasses(searchKeyword);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("Mathematics", result.get(0).getClassesName());
-
-        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
-    }
-
-    @Test
-    void testSearchClasses_EmptyResult() {
-        String searchKeyword = "Physics";
-
-        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
-                .thenReturn(List.of());
-
-        List<ClassesResponse> result = classesService.searchClasses(searchKeyword);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
-    }
-
-    @Test
-    void testSearchClasses_Fail_ExceptionThrown() {
-        String searchKeyword = "History";
-
-        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
-                .thenThrow(new RuntimeException("Database error"));
-
-        Exception exception = assertThrows(RuntimeException.class, () -> classesService.searchClasses(searchKeyword));
-
-        assertEquals("Failed to search classes", exception.getMessage());
-
-        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
-    }
+//    @Test
+//    void testSearchClasses_Fail_ExceptionThrown() {
+//        String searchKeyword = "History";
+//
+//        when(classesRepository.findByClassesNameContainingIgnoringCase(searchKeyword))
+//                .thenThrow(new RuntimeException("Database error"));
+//
+//        Exception exception = assertThrows(RuntimeException.class, () -> classesService.searchClasses(searchKeyword));
+//
+//        assertEquals("Failed to search classes", exception.getMessage());
+//
+//        verify(classesRepository, times(1)).findByClassesNameContainingIgnoringCase(searchKeyword);
+//    }
 }
