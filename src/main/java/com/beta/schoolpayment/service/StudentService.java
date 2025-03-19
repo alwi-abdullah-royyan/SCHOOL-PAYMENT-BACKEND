@@ -137,7 +137,7 @@ public class StudentService {
         response.setPhoneNumber(student.getPhoneNumber());
         response.setCreatedAt(student.getCreatedAt());
         response.setUpdatedAt(student.getUpdatedAt());
-
+        response.setDeletedAt(student.getDeletedAt());
         return response;
     }
 

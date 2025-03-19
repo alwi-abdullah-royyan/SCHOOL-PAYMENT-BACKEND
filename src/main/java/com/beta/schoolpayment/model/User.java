@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -45,9 +46,11 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-
     @Column(name = "profile_picture")
     private String profilePicture;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
+    private List<Payment> payments;
 
     @PrePersist
     protected void onCreate() {
@@ -59,6 +62,4 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-
 }
