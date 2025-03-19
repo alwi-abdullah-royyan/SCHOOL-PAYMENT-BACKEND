@@ -4,6 +4,9 @@ import com.beta.schoolpayment.dto.request.PaymentTypeRequest;
 import com.beta.schoolpayment.dto.response.PaymentTypeResponse;
 import com.beta.schoolpayment.model.PaymentType;
 import com.beta.schoolpayment.repository.PaymentTypeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,12 +32,18 @@ public class PaymentTypeService {
         return convertToResponse(savedPaymentType);
     }
 
-    // ✅ Get All Payment Types
-    public List<PaymentTypeResponse> getAllPaymentTypes() {
-        return paymentTypeRepository.findAll()
-                .stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+//    // ✅ Get All Payment Types
+//    public List<PaymentTypeResponse> getAllPaymentTypes() {
+//        return paymentTypeRepository.findAll()
+//                .stream()
+//                .map(this::convertToResponse)
+//                .collect(Collectors.toList());
+//    }
+
+    public Page<PaymentTypeResponse> getAllPaymentTypes(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return paymentTypeRepository.findAll(pageable)
+                .map(this::convertToResponse);
     }
 
     // ✅ Search Payment Type by Query

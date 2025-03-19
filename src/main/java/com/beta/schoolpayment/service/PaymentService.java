@@ -56,14 +56,8 @@ public class PaymentService {
         // Cari jenis pembayaran
         PaymentType paymentType = paymentTypeRepository.findById(request.getPaymentTypeId())
                 .orElseThrow(() -> new RuntimeException("Jenis pembayaran tidak ditemukan"));
-
         // ✅ List pembayaran yang diperbolehkan
         List<String> allowedPaymentTypes = Arrays.asList("SPP", "UTS", "UAS", "Ekstrakurikuler", "Lainnya");
-
-        // ✅ Pastikan paymentType yang diinput valid
-        if (!allowedPaymentTypes.contains(paymentType.getPaymentTypeName())) {
-            throw new IllegalArgumentException("Jenis pembayaran tidak valid. Hanya diperbolehkan: " + allowedPaymentTypes);
-        }
 
         // Buat objek Payment
         Payment payment = new Payment();
@@ -132,9 +126,9 @@ public class PaymentService {
                 .orElseThrow(() -> new EntityNotFoundException("Payment tidak ditemukan dengan ID: " + id));
 
         // Validasi status pembayaran yang diperbolehkan
-        List<String> validStatuses = Arrays.asList("PENDING", "PAID", "CANCELED", "COMPLETED");
+        List<String> validStatuses = Arrays.asList("PENDING","FAILED", "REFUNDED", "COMPLETED");
         if (!validStatuses.contains(status.toUpperCase())) {
-            throw new IllegalArgumentException("Status pembayaran tidak valid. Pilihan: PENDING, PAID, CANCELED, COMPLETED");
+            throw new IllegalArgumentException("Status pembayaran tidak valid. Pilihan: ,FAILED, PENDING,REFUNDED, CANCELED, COMPLETED");
         }
 
         payment.setPaymentStatus(status.toUpperCase());

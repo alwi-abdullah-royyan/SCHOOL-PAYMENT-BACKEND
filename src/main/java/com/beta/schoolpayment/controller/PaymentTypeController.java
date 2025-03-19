@@ -4,6 +4,7 @@ import com.beta.schoolpayment.dto.request.PaymentTypeRequest;
 import com.beta.schoolpayment.dto.response.PaymentTypeResponse;
 import com.beta.schoolpayment.service.PaymentTypeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +33,22 @@ public class PaymentTypeController {
         }
     }
 
-    // ✅ Get All Payment Types
     @GetMapping
-    public ResponseEntity<?> getAllPaymentTypes() {
+    public ResponseEntity<?> getAllPaymentTypes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<PaymentTypeResponse> paymentTypes = paymentTypeService.getAllPaymentTypes();
-            return ResponseEntity.ok(paymentTypes);
+            // Validasi input pagination
+            if (page < 0 || size <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Page must be >= 0 and size must be > 0");
+            }
+
+            Page<PaymentTypeResponse> response = paymentTypeService.getAllPaymentTypes(page, size);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching payment types: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred: " + e.getMessage());
         }
     }
 
