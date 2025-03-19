@@ -143,17 +143,19 @@ public class PaymentService {
         PaymentResponse response = new PaymentResponse();
         response.setPaymentId(payment.getPaymentId());
         response.setPaymentName(payment.getPaymentName());
-        response.setUserId(payment.getUser().getUserId());
+        response.setUserId(payment.getUser() != null ? payment.getUser().getUserId() : null); // Handle null user
         response.setStudentId(payment.getStudent().getId());
         response.setStudentName(payment.getStudent().getName());
-        response.setPaymentTypeId(Long.valueOf(payment.getPaymentType().getPaymentTypeId()));
-        response.setPaymentTypeName(payment.getPaymentType().getPaymentTypeName());
+        response.setPaymentTypeId(payment.getPaymentType() != null ? Long.valueOf(payment.getPaymentType().getPaymentTypeId()) : null);
+        response.setPaymentTypeName(payment.getPaymentType() != null ? payment.getPaymentType().getPaymentTypeName() : null);
         response.setAmount(payment.getAmount());
         response.setPaymentStatus(payment.getPaymentStatus());
         response.setDescription(payment.getDescription());
         response.setCreatedAt(payment.getCreatedAt());
         response.setUpdatedAt(payment.getUpdatedAt());
         response.setDeletedAt(payment.getDeletedAt());
+
         return response;
     }
+
 }

@@ -19,9 +19,10 @@ public class ClassesController {
     private ClassesService classesService;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllClasses(){
+    public ResponseEntity<?> getAllClasses(@RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "10") int size){
         try {
-            List<ClassesResponse> response = classesService.findAll();
+            Page<ClassesResponse> response = classesService.findAll(page,size);
             return ResponseEntity.ok(new ApiResponse<>(200, response));
         } catch (Exception e) {
             return ResponseEntity
@@ -67,8 +68,10 @@ public class ClassesController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<ClassesResponse>>> searchClasses(@RequestParam String classesName){
-        List<ClassesResponse> response = classesService.searchClasses(classesName);
+    public ResponseEntity<?> searchClasses(@RequestParam String classesName,
+                                           @RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "10") int size){
+        Page<ClassesResponse> response = classesService.searchClasses(classesName, page, size);
         return ResponseEntity.ok(new ApiResponse<>(200, response));
     }
 }

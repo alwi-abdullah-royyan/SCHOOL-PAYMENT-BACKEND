@@ -29,7 +29,7 @@ public class Payment {
     private String paymentName;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true) // Allow null values
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne
