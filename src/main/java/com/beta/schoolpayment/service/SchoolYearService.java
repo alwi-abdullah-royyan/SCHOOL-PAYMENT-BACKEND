@@ -9,8 +9,11 @@ import com.beta.schoolpayment.model.SchoolYear;
 import com.beta.schoolpayment.repository.SchoolYearRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,14 +23,12 @@ public class SchoolYearService {
     @Autowired
     private SchoolYearRepository schoolYearRepository;
 
-    public List<SchoolYearResponse> findAll() {
+    public Page<SchoolYearResponse> findAll(Pageable pageable) {
         try {
-            return schoolYearRepository.findAll()
-                    .stream()
-                    .map(this::convertToResponse)
-                    .toList();
+            return schoolYearRepository.findAll(pageable)
+                    .map(this::convertToResponse);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get all classes", e);
+            throw new RuntimeException("Failed to get all school years", e);
         }
     }
 
@@ -84,6 +85,26 @@ public class SchoolYearService {
         }
     }
 
+    @Transactional
+    public void softDeleteSchoolYear(Long schoolYearId) {
+        SchoolYear schoolYear = schoolYearRepository.findById(schoolYearId)
+                .orElseThrow(() -> new RuntimeException("School year not found"));
+
+        schoolYear.setDeletedAt(LocalDateTime.now());
+        schoolYearRepository.save(schoolYear);
+    }
+
+    @Transactional
+    public void restoreSchoolYear(Long id) {
+        SchoolYear schoolYear = schoolYearRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("School year not found"));
+        if (schoolYear.getDeletedAt() == null) {
+            throw new RuntimeException("School year is not soft deleted");
+        }
+        schoolYear.setDeletedAt(null); // Mengembalikan data
+        schoolYearRepository.save(schoolYear);
+    }
+
     private SchoolYearResponse convertToResponse(SchoolYear schoolYear) {
         SchoolYearResponse response = new SchoolYearResponse();
         response.setSchoolYearId(schoolYear.getId());
@@ -92,6 +113,7 @@ public class SchoolYearService {
         response.setEndDate(schoolYear.getEndDate());
         response.setCreatedAt(schoolYear.getCreatedAt());
         response.setUpdatedAt(schoolYear.getUpdatedAt());
+        response.setDeletedAt(schoolYear.getDeletedAt());
         return response;
     }
 }

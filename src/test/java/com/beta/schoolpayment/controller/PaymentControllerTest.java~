@@ -1,0 +1,154 @@
+package com.beta.schoolpayment.controller;
+
+import com.beta.schoolpayment.dto.request.PaymentFilterCriteria;
+import com.beta.schoolpayment.dto.request.PaymentRequest;
+import com.beta.schoolpayment.dto.response.PaymentResponse;
+import com.beta.schoolpayment.security.CustomUserDetails;
+import com.beta.schoolpayment.service.PaymentExportService;
+import com.beta.schoolpayment.service.PaymentReceiptService;
+import com.beta.schoolpayment.service.PaymentService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ResponseEntity;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.HttpStatus.*;
+
+@ExtendWith(MockitoExtension.class)
+class PaymentControllerTest {
+
+    @InjectMocks
+    private PaymentController paymentController;
+
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private PaymentExportService paymentExportService;
+
+    @Mock
+    private PaymentReceiptService paymentReceiptService;
+
+    private PaymentRequest paymentRequest;
+    private PaymentResponse paymentResponse;
+    private CustomUserDetails userDetails;
+    private UUID paymentId;
+
+    @BeforeEach
+    void setUp() {
+        paymentId = UUID.randomUUID();
+        userDetails = mock(CustomUserDetails.class);
+        paymentRequest = new PaymentRequest();
+        paymentRequest.setAmount(BigDecimal.valueOf(500000));
+        paymentRequest.setPaymentName("SPP");
+        paymentRequest.setPaymentTypeId(1L);
+
+        paymentResponse = new PaymentResponse();
+        paymentResponse.setPaymentId(paymentId);
+        paymentResponse.setPaymentStatus("COMPLETED");
+
+        when(userDetails.getUserId()).thenReturn(UUID.randomUUID());
+    }
+
+    @Test
+    void createPayment_Success() {
+        when(paymentService.createPayment(any(PaymentRequest.class), any(CustomUserDetails.class)))
+                .thenReturn(paymentResponse);
+
+        ResponseEntity<?> response = paymentController.createPayment(paymentRequest, userDetails);
+
+        assertEquals(OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(paymentService).createPayment(any(PaymentRequest.class), any(CustomUserDetails.class));
+    }
+
+    @Test
+    void getAllPayments_WithData_Success() {
+        PaymentFilterCriteria criteria = new PaymentFilterCriteria();
+        List<PaymentResponse> payments = List.of(paymentResponse);
+        Page<PaymentResponse> page = new PageImpl<>(payments);
+
+        when(paymentService.getAllPayments(any(), anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(page);
+
+        ResponseEntity<?> response = paymentController.getAllPayments(null, null, null, null, null, null, 0, 10, "createdAt", "desc");
+
+        assertEquals(OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(paymentService).getAllPayments(any(), anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAllPayments_NoData_ReturnsNoContent() {
+        when(paymentService.getAllPayments(any(), anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(Page.empty());
+
+        ResponseEntity<?> response = paymentController.getAllPayments(null, null, null, null, null, null, 0, 10, "createdAt", "desc");
+
+        assertEquals(NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    void getPaymentById_Success() {
+        when(paymentService.getPaymentById(paymentId)).thenReturn(paymentResponse);
+
+        ResponseEntity<?> response = paymentController.getPaymentById(paymentId);
+
+        assertEquals(OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(paymentService).getPaymentById(paymentId);
+    }
+
+    @Test
+    void getPaymentById_NotFound_ReturnsNotFound() {
+        when(paymentService.getPaymentById(paymentId)).thenThrow(new RuntimeException("Payment not found"));
+
+        ResponseEntity<?> response = paymentController.getPaymentById(paymentId);
+
+        assertEquals(NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void updatePaymentStatus_Success() {
+        Map<String, String> requestBody = Map.of("status", "PAID");
+        when(paymentService.updatePaymentStatus(paymentId, "PAID")).thenReturn(paymentResponse);
+
+        ResponseEntity<?> response = paymentController.updatePaymentStatus(paymentId, requestBody);
+
+        assertEquals(OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(paymentService).updatePaymentStatus(paymentId, "PAID");
+    }
+
+    @Test
+    void deletePayment_Success() {
+        doNothing().when(paymentService).deletePayment(paymentId);
+
+        ResponseEntity<?> response = paymentController.deletePayment(paymentId);
+
+        assertEquals(OK, response.getStatusCode());
+        verify(paymentService).deletePayment(paymentId);
+    }
+
+    @Test
+    void downloadPaymentReceipt_Success() throws Exception {
+        when(paymentService.getPaymentById(paymentId)).thenReturn(paymentResponse);
+        when(paymentReceiptService.generatePaymentReceipt(any())).thenReturn(new byte[]{1, 2, 3});
+
+        ResponseEntity<?> response = paymentController.downloadPaymentReceipt(paymentId);
+
+        assertEquals(OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(paymentReceiptService).generatePaymentReceipt(any());
+    }
+}
