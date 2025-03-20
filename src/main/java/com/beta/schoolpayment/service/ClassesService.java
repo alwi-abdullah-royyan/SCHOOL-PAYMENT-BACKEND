@@ -34,7 +34,17 @@ public class ClassesService {
             throw new RuntimeException("Failed to get all classes", e);
         }
     }
-
+    public ClassesResponse getClassesById(Long classesId) {
+        try {
+            Classes classes = classesRepository.findByClassesId(classesId)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Classes not found"));
+            return convertToResponse(classes);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get classes by id", e);
+        }
+    }
     @Transactional
     public ClassesResponse createClasses(ClassesRequest request) {
         try {

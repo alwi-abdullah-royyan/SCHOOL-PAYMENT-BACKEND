@@ -30,7 +30,17 @@ public class ClassesController {
                     .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
-
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> getClassesById(@PathVariable Long id){
+        try {
+            ClassesResponse response = classesService.getClassesById(id);
+            return ResponseEntity.ok(new ApiResponse<>(200, response));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
     @PostMapping("/create")
     public ResponseEntity<?> createClasses(@RequestBody ClassesRequest classesRequest){
         try {
