@@ -118,6 +118,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
     @PutMapping(consumes="multipart/form-data")
     public ResponseEntity<?> updateUser(@Valid @ModelAttribute @RequestBody UserRequest userRequest, Authentication authentication) {
         try {

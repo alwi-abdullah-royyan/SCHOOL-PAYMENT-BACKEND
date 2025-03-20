@@ -29,15 +29,17 @@ public class PaymentExportService {
             int rowNum = 1;
             for (PaymentResponse payment : payments) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(payment.getPaymentId().toString());
-                row.createCell(1).setCellValue(payment.getPaymentName());
-                row.createCell(2).setCellValue(payment.getUserId().toString());
-                row.createCell(3).setCellValue(payment.getStudentName());
-                row.createCell(4).setCellValue(payment.getStudentId());
-                row.createCell(5).setCellValue(payment.getAmount().doubleValue());
-                row.createCell(6).setCellValue(payment.getPaymentStatus());
-                row.createCell(7).setCellValue(payment.getCreatedAt().toString());
+
+                row.createCell(0).setCellValue(payment.getPaymentId() != null ? payment.getPaymentId().toString() : "N/A");
+                row.createCell(1).setCellValue(payment.getPaymentName() != null ? payment.getPaymentName() : "N/A");
+                row.createCell(2).setCellValue(payment.getUserId() != null ? payment.getUserId().toString() : "N/A");
+                row.createCell(3).setCellValue(payment.getStudentName() != null ? payment.getStudentName() : "N/A");
+                row.createCell(4).setCellValue(payment.getStudentId() != null ? payment.getStudentId().toString() : "N/A");
+                row.createCell(5).setCellValue(payment.getAmount() != null ? payment.getAmount().doubleValue() : 0.0);
+                row.createCell(6).setCellValue(payment.getPaymentStatus() != null ? payment.getPaymentStatus() : "N/A");
+                row.createCell(7).setCellValue(payment.getCreatedAt() != null ? payment.getCreatedAt().toString() : "N/A");
             }
+
 
             // 🔹 Auto-size kolom
             for (int i = 0; i < columns.length; i++) {
