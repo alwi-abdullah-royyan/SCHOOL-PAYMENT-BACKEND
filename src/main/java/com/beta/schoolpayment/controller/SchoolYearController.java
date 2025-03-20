@@ -7,6 +7,8 @@ import com.beta.schoolpayment.dto.response.ClassesResponse;
 import com.beta.schoolpayment.dto.response.SchoolYearResponse;
 import com.beta.schoolpayment.service.SchoolYearService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +22,9 @@ public class SchoolYearController {
     private SchoolYearService schoolYearService;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllClasses(){
+    public ResponseEntity<?> getAllClasses(Pageable pageable) {
         try {
-            List<SchoolYearResponse> response = schoolYearService.findAll();
+            Page<SchoolYearResponse> response = schoolYearService.findAll(pageable);
             return ResponseEntity.ok(new ApiResponse<>(200, response));
         } catch (Exception e) {
             return ResponseEntity
@@ -71,5 +73,29 @@ public class SchoolYearController {
     public ResponseEntity<ApiResponse<List<SchoolYearResponse>>> searchSchoolYear(@RequestParam String schoolYear) {
         List<SchoolYearResponse> response = schoolYearService.searchSchoolYear(schoolYear);
         return ResponseEntity.ok(new ApiResponse<>(200, response));
+    }
+
+    @DeleteMapping("/{id}/soft")
+    public ResponseEntity<String> softDeleteSchoolYear(@PathVariable Long id) {
+        try {
+            schoolYearService.softDeleteSchoolYear(id);
+            return ResponseEntity.ok("School year successfully soft deleted");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal Server Error");
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<String> restoreSchoolYear(@PathVariable Long id) {
+        try {
+            schoolYearService.restoreSchoolYear(id);
+            return ResponseEntity.ok("School year successfully restored");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal Server Error");
+        }
     }
 }

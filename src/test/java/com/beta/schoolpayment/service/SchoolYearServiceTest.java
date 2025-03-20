@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,39 +69,48 @@ public class SchoolYearServiceTest {
 
     @Test
     void testFindAll_Success() {
-        when(schoolYearRepository.findAll()).thenReturn(List.of(schoolYear1, schoolYear2));
+        Pageable pageable = PageRequest.of(0, 10); // Halaman pertama, 10 item per halaman
+        List<SchoolYear> schoolYears = List.of(schoolYear1, schoolYear2);
+        Page<SchoolYear> schoolYearPage = new PageImpl<>(schoolYears, pageable, schoolYears.size());
 
-        List<SchoolYearResponse> responses = schoolYearService.findAll();
+        when(schoolYearRepository.findAll(any(Pageable.class))).thenReturn(schoolYearPage);
+
+        Page<SchoolYearResponse> responses = schoolYearService.findAll(pageable);
 
         assertNotNull(responses);
-        assertEquals(2, responses.size());
-        assertEquals("2024-2025", responses.get(0).getSchoolYear());
-        assertEquals("2025-2026", responses.get(1).getSchoolYear());
+        assertEquals(2, responses.getContent().size());
+        assertEquals("2024-2025", responses.getContent().get(0).getSchoolYear());
+        assertEquals("2025-2026", responses.getContent().get(1).getSchoolYear());
 
-        verify(schoolYearRepository, times(1)).findAll();
+        verify(schoolYearRepository, times(1)).findAll(any(Pageable.class));
     }
 
     @Test
     void testFindAll_EmptyList() {
-        when(schoolYearRepository.findAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10); // Halaman pertama, 10 item per halaman
+        Page<SchoolYear> emptyPage = new PageImpl<>(List.of(), pageable, 0); // Halaman kosong
 
-        List<SchoolYearResponse> responses = schoolYearService.findAll();
+        when(schoolYearRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
+
+        Page<SchoolYearResponse> responses = schoolYearService.findAll(pageable);
 
         assertNotNull(responses);
         assertTrue(responses.isEmpty());
 
-        verify(schoolYearRepository, times(1)).findAll();
+        verify(schoolYearRepository, times(1)).findAll(any(Pageable.class));
     }
 
     @Test
     void testFindAll_ExceptionHandling() {
-        when(schoolYearRepository.findAll()).thenThrow(new RuntimeException("Database error"));
+        Pageable pageable = PageRequest.of(0, 10); // Pageable untuk findAll()
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> schoolYearService.findAll());
+        when(schoolYearRepository.findAll(any(Pageable.class))).thenThrow(new RuntimeException("Database error"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> schoolYearService.findAll(pageable));
 
         assertEquals("Failed to get all classes", exception.getMessage());
 
-        verify(schoolYearRepository, times(1)).findAll();
+        verify(schoolYearRepository, times(1)).findAll(any(Pageable.class));
     }
 
     @Test

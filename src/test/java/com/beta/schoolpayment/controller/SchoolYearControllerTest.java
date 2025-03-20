@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -43,9 +47,12 @@ public class SchoolYearControllerTest {
 
     @Test
     void testGetAllClasses_Success() {
-        when(schoolYearService.findAll()).thenReturn(List.of(schoolYearResponse));
+        Pageable pageable = PageRequest.of(0, 10); // Halaman pertama, 10 item per halaman
+        Page<SchoolYearResponse> schoolYearPage = new PageImpl<>(List.of(schoolYearResponse));
 
-        ResponseEntity<?> response = schoolYearController.getAllClasses();
+        when(schoolYearService.findAll(any(Pageable.class))).thenReturn(schoolYearPage);
+
+        ResponseEntity<?> response = schoolYearController.getAllClasses(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((ApiResponse<?>) response.getBody()).getStatus()).isEqualTo(200);
@@ -54,9 +61,12 @@ public class SchoolYearControllerTest {
 
     @Test
     void testGetAllClasses_InternalServerError() {
-        when(schoolYearService.findAll()).thenThrow(new RuntimeException("Database error"));
+        Pageable pageable = PageRequest.of(0, 10); // Halaman pertama, 10 item per halaman
 
-        ResponseEntity<?> response = schoolYearController.getAllClasses();
+        when(schoolYearService.findAll(any(Pageable.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        ResponseEntity<?> response = schoolYearController.getAllClasses(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(((ApiResponse<?>) response.getBody()).getStatus()).isEqualTo(500);
